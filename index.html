@@ -8,17 +8,17 @@
 /* Layout: gamebook page on the right (RTL), character sheet as a narrow ledger on the left; stacks on phones */
 :root{
   --bg:#efe9eb; --surface:#fbf8f9; --sunk:#e6dee1; --ink:#231b21; --muted:#6c5f68; --line:#d8ccd1;
-  --salt:#9c3b57; --frost:#22708a; --danger:#a3271d; --good:#2e6a3a;
+  --salt:#b3261e; --frost:#22708a; --danger:#a3271d; --good:#2e6a3a;
   --f-display:"Suez One","David Libre",serif;
   --f-body:"David Libre","David",Georgia,serif;
   --f-ui:"Assistant","Arial Hebrew",Arial,sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#141117; --surface:#1d1921; --sunk:#26212b; --ink:#ece4e8; --muted:#a2959e; --line:#372f3a;
-  --salt:#e58ba3; --frost:#7cc3d6; --danger:#ee6a5e; --good:#80c48f; color-scheme:dark}}
+  --salt:#e5483b; --frost:#7cc3d6; --danger:#ee6a5e; --good:#80c48f; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#141117; --surface:#1d1921; --sunk:#26212b; --ink:#ece4e8; --muted:#a2959e; --line:#372f3a;
-  --salt:#e58ba3; --frost:#7cc3d6; --danger:#ee6a5e; --good:#80c48f; color-scheme:dark}
+  --salt:#e5483b; --frost:#7cc3d6; --danger:#ee6a5e; --good:#80c48f; color-scheme:dark}
 html,body{background:var(--bg);color:var(--ink)}
 body{font-family:var(--f-ui)}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
@@ -463,7 +463,7 @@ function topBar(){
 function creation(){
  const c=CL[cr.cls],cs=cr.rolls[cr.cls],hp=Math.max(1,c.hd+mod(cs.con));
  return`<div class="hero">אסיר המלח</div><div class="tag">הרפתקת יחיד לסכנות ומפלצות 1.4 · רמה 1 · כ־35 קטעים</div>
- <div class="intro"><p>זאנזר הקוסם חטף אותך והשליך אותך למכרה מלח עתיק, שהיה פעם מבצר גמדי. הגמדים נטשו אותו כשדרקון השתלט על המקום, והדרקון ישן מאז. ${cr.g==='f'?'אינך זוכרת':'אינך זוכר'} דבר. לא את העולם שבחוץ, ולא את עצמך.</p></div>
+ <div class="intro"><p>זאנזר הקוסם חטף אותך והשליך אותך למכרה מלח עתיק, שהיה פעם מבצר גמדי. הגמדים נטשו אותו בפחד מסיבה שנשכחה בערפילי הזמן. ${cr.g==='f'?'אינך זוכרת':'אינך זוכר'} דבר. לא את העולם שבחוץ, ולא את ההיסטוריה שלך.</p></div>
  <div class="field"><label for="nm">שם הדמות (יתגלה בהמשך)</label><input type="text" id="nm" value="${esc(cr.name)}" maxlength="24"></div>
  <div class="field"><label>מין</label><div class="seg">${B('גבר',()=>{cr.g='m';saveCr(cr);render()},'btn',`aria-pressed="${cr.g==='m'}"`)}${B('אישה',()=>{cr.g='f';saveCr(cr);render()},'btn',`aria-pressed="${cr.g==='f'}"`)}</div></div>
  <div class="field"><label>מקצוע</label><div class="classes">${Object.keys(CL).map(k=>B(`<span class="n">${cr.g==='f'?CL[k].nf:CL[k].n}</span><span class="d">${CL[k].desc}</span>`,()=>{cr.cls=k;saveCr(cr);render()},'cls',`aria-pressed="${cr.cls===k}"`)).join('')}</div></div>
