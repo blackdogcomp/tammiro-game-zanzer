@@ -1,0 +1,545 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>אסיר המלח</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Suez+One&family=David+Libre:wght@400;500;700&family=Assistant:wght@400;600;700&display=swap">
+<style>
+/* Layout: gamebook page on the right (RTL), character sheet as a narrow ledger on the left; stacks on phones */
+:root{
+  --bg:#efe9eb; --surface:#fbf8f9; --sunk:#e6dee1; --ink:#231b21; --muted:#6c5f68; --line:#d8ccd1;
+  --salt:#9c3b57; --frost:#22708a; --danger:#a3271d; --good:#2e6a3a;
+  --f-display:"Suez One","David Libre",serif;
+  --f-body:"David Libre","David",Georgia,serif;
+  --f-ui:"Assistant","Arial Hebrew",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141117; --surface:#1d1921; --sunk:#26212b; --ink:#ece4e8; --muted:#a2959e; --line:#372f3a;
+  --salt:#e58ba3; --frost:#7cc3d6; --danger:#ee6a5e; --good:#80c48f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141117; --surface:#1d1921; --sunk:#26212b; --ink:#ece4e8; --muted:#a2959e; --line:#372f3a;
+  --salt:#e58ba3; --frost:#7cc3d6; --danger:#ee6a5e; --good:#80c48f; color-scheme:dark}
+html,body{background:var(--bg);color:var(--ink)}
+body{font-family:var(--f-ui)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+#app{direction:rtl}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:8px}
+.top-in{max-width:1080px;margin:0 auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{font-family:var(--f-display);font-size:22px;line-height:1;color:var(--salt);letter-spacing:.02em}
+.chips{display:flex;gap:6px;margin-inline-start:auto;flex-wrap:wrap}
+.chip{font-size:13px;padding:3px 9px;border:1px solid var(--line);border-radius:999px;background:var(--surface);font-variant-numeric:tabular-nums;white-space:nowrap}
+.chip b{font-weight:700}
+.chip.hp b{color:var(--danger)} .chip.lk b{color:var(--frost)}
+.wrap{max-width:1080px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:28px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+@media (max-width:820px){.wrap{grid-template-columns:minmax(0,1fr);gap:20px}}
+.page{min-width:0}
+.secno{font-family:var(--f-display);font-size:48px;line-height:1;color:var(--salt);font-variant-numeric:tabular-nums}
+.sechead{display:flex;align-items:flex-end;gap:14px;padding-bottom:10px;border-bottom:2px solid var(--ink);margin-bottom:18px}
+.sechead h1{font-family:var(--f-display);font-weight:400;font-size:30px;line-height:1.15;margin:0;text-wrap:balance}
+.prose{font-family:var(--f-body);font-size:20px;line-height:1.7;max-width:62ch}
+.prose p{margin:0 0 .9em}
+.prose q,.prose .rune{font-style:normal}
+.rune{display:block;margin:.2em 0 1em;padding:10px 14px;background:var(--sunk);border-radius:4px;font-weight:500}
+.msgs{display:flex;flex-direction:column;gap:4px;margin:4px 0 18px;max-width:62ch}
+.msg{font-size:14px;color:var(--muted);padding-inline-start:14px;position:relative}
+.msg::before{content:"◆";position:absolute;inset-inline-start:0;font-size:9px;top:5px;color:var(--salt)}
+.msg.bad::before{color:var(--danger)} .msg.ok::before{color:var(--good)}
+.choices{display:flex;flex-direction:column;gap:10px;max-width:62ch;margin-top:8px}
+button{font:inherit;color:inherit;cursor:pointer}
+.choice{display:flex;justify-content:space-between;align-items:center;gap:14px;text-align:right;width:100%;
+  background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:13px 16px;font-family:var(--f-body);font-size:17px;line-height:1.4;transition:border-color .15s,transform .15s}
+.choice:hover{border-color:var(--salt)} .choice:active{transform:translateY(1px)}
+.choice:focus-visible,.btn:focus-visible,.cls:focus-visible,input:focus-visible{outline:2px solid var(--frost);outline-offset:2px}
+.go{font-family:var(--f-ui);font-size:13px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.go.chk{color:var(--frost)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px;max-width:62ch;margin:6px 0 14px}
+.plabel{font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--frost);margin-bottom:8px}
+.plabel.red{color:var(--danger)}
+.roll{font-variant-numeric:tabular-nums;font-size:15px;line-height:1.6}
+.res{font-weight:700} .res.ok{color:var(--good)} .res.bad{color:var(--danger)}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.btn{border:1px solid var(--line);background:var(--bg);border-radius:6px;padding:8px 14px;font-size:15px;font-weight:600}
+.btn:hover{border-color:var(--salt)}
+.btn.main{background:var(--salt);border-color:var(--salt);color:var(--surface)}
+.btn.luck{border-color:var(--frost);color:var(--frost)}
+.btn:disabled{opacity:.45;cursor:default}
+.foes{display:flex;flex-direction:column;gap:6px}
+.foe{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:8px 10px;background:var(--bg);border-radius:4px;font-variant-numeric:tabular-nums}
+.foe .nm{font-weight:700} .foe .sub{font-size:13px;color:var(--muted)}
+.foe.out{opacity:.5} .foe.out .nm{text-decoration:line-through}
+.bar{height:6px;width:90px;background:var(--sunk);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--danger)}
+.clog{margin-top:12px;font-size:14px;line-height:1.55;max-height:220px;overflow:auto;border-top:1px solid var(--line);padding-top:8px;font-variant-numeric:tabular-nums}
+.clog div{padding:1px 0}
+.clog .h{color:var(--salt);font-weight:700;margin-top:4px}
+/* sheet */
+.sheet{min-width:0;font-size:14px;align-self:start;position:sticky;top:calc(env(safe-area-inset-top,0px) + 70px)}
+@media (max-width:820px){.sheet{position:static}}
+.sheet h2{font-family:var(--f-display);font-size:22px;line-height:1.2;margin:0;color:var(--ink)}
+.sheet .who{color:var(--muted);margin:2px 0 12px}
+.sblock{border-top:1px solid var(--line);padding-block:10px}
+.slabel{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--muted);margin-bottom:6px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:5px 6px;text-align:center;font-variant-numeric:tabular-nums}
+.stat .k{font-size:11px;color:var(--muted)} .stat .v{font-size:20px;font-weight:700;line-height:1.1} .stat .m{font-size:11px;color:var(--muted)}
+.vitals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.vit{text-align:center;padding:6px;border-radius:4px;background:var(--surface);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.vit .v{font-size:22px;font-weight:700;line-height:1.1}.vit .k{font-size:11px;color:var(--muted)}
+.vit.hp .v{color:var(--danger)} .vit.lk .v{color:var(--frost)}
+.rows{display:flex;flex-direction:column;gap:3px;font-variant-numeric:tabular-nums}
+.row{display:flex;justify-content:space-between;gap:8px}
+.row span:last-child{font-weight:600}
+.inv{display:flex;flex-direction:column;gap:4px}
+.inv .row{align-items:center}
+.mini{font-size:12px;padding:2px 8px;border:1px solid var(--line);border-radius:4px;background:var(--bg)}
+.mini:hover{border-color:var(--salt)}
+.dlog{font-size:12.5px;color:var(--muted);line-height:1.5;font-variant-numeric:tabular-nums}
+.note{font-size:12px;color:var(--muted)}
+/* creation */
+.intro{font-family:var(--f-body);font-size:19px;line-height:1.7;max-width:62ch}
+.hero{font-family:var(--f-display);font-size:min(72px,16vw);line-height:1.05;color:var(--salt);margin:6px 0 4px}
+.tag{font-size:14px;color:var(--muted);letter-spacing:.04em;margin-bottom:18px}
+.field{display:flex;flex-direction:column;gap:6px;margin:14px 0}
+.field label{font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--muted)}
+input[type=text]{font:inherit;font-size:17px;padding:9px 12px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);max-width:320px;width:100%}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.classes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;max-width:62ch}
+@media (max-width:560px){.classes{grid-template-columns:minmax(0,1fr)}}
+.cls{text-align:right;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:4px}
+.cls .n{font-family:var(--f-display);font-size:22px;line-height:1.1}
+.cls .d{font-size:13px;color:var(--muted);line-height:1.4}
+.cls[aria-pressed="true"],.btn[aria-pressed="true"]{border-color:var(--salt);box-shadow:0 0 0 1px var(--salt) inset}
+.endmark{font-family:var(--f-display);font-size:34px;line-height:1.2;margin:10px 0}
+.endmark.dead{color:var(--danger)} .endmark.win{color:var(--good)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div id="app"></div>
+
+<script>
+"use strict";
+/* ---------- dice ---------- */
+const R=s=>1+Math.floor(Math.random()*s);
+function dice(n,s,p=0){let t=0;const r=[];for(let i=0;i<n;i++){const v=R(s);r.push(v);t+=v}return{t:t+p,r}}
+const DN=(n,s,p=0)=>(n>1?n:'')+'ק'+s+(p?' ועוד '+p:'');
+const mod=v=>v<=3?-3:v<=5?-2:v<=8?-1:v<=12?0:v<=15?1:v<=17?2:3;
+const sg=v=>'<span dir="ltr" style="unicode-bidi:isolate">'+(v>0?'+'+v:v<0?'−'+(-v):'0')+'</span>';
+
+/* ---------- rules data (סכנות ומפלצות 1.4) ---------- */
+const AB={str:'כוח',int:'תבונה',wis:'חוכמה',dex:'זריזות',con:'חוסן',cha:'כריזמה'};
+const ABK=['str','int','wis','dex','con','cha'];
+const SV={death:'מוות או רעל',wand:'שרביט קסם',para:'שיתוק או התאבנות',breath:'נשיפת דרקון',spell:'מוט, מטה או לחש'};
+const SK={climb:'טיפוס',hide:'הסתתרות בצללים',silent:'תנועה שקטה',locks:'פתיחת מנעולים',traps:'גילוי מלכודות',hear:'הקשבה'};
+const TS={locks:45,traps:40,climb:87,silent:50,hide:40,hear:50}; // רמה 1 כולל בונוס
+const TSB={locks:15,traps:10,climb:87,silent:20,hide:10,hear:30};
+const CL={
+ fighter:{n:'לוחם',nf:'לוחמת',hd:8,pr:'str',sv:{death:12,wand:13,para:14,breath:15,spell:16},
+   w:{n:'חרב ארוכה',d:[1,8]},arm:{n:'שריון שרשראות',ac:14},shield:true,inv:{torch:1},
+   kit:'חרב ארוכה, שריון שרשראות, מגן ולפיד',
+   desc:'מומחה לקרב. ק8 נק"פ, שריון שרשראות ומגן, חרב ארוכה.'},
+ mu:{n:'קוסם',nf:'קוסמת',hd:4,pr:'int',sv:{death:13,wand:14,para:13,breath:16,spell:15},
+   w:{n:'פגיון',d:[1,4]},arm:null,shield:false,inv:{book:1,lantern:1},
+   kit:'פגיון, עששית וספר לחשים כרוך בעור, ובו שני לחשים בכתב ידך',
+   desc:'חלש בקרב, ק4 נק"פ. יודע שני לחשים: שינה וקליע קסם.'},
+ thief:{n:'גנב',nf:'גנבת',hd:4,pr:'dex',sv:{death:13,wand:14,para:13,breath:16,spell:15},
+   w:{n:'חרב קצרה',d:[1,6]},arm:{n:'שריון עור',ac:12},shield:false,inv:{rope:1,tools:1},
+   kit:'חרב קצרה, שריון עור, חבל באורך 15 מטרים וכלי גנב',
+   desc:'ק4 נק"פ. מטפס, מתגנב, מסתתר ופותח מנעולים. דקירה בגב בהפתעה.'}
+};
+const IT={spike:'יתד ברזל',rope:'חבל, 15 מ׳',tools:'כלי גנב',book:'ספר לחשים',torch:'לפיד',lantern:'עששית',
+ potion:'שיקוי ריפוי',glow:'בלוטות זוהרות',flash:'אבקת הבזק',key:'מפתח הגשר',map:'מפה גסה',ring:'טבעת הגנה ועוד 1',treasure:'אבני חן ותכשיט (כ־900 מ"ז)'};
+
+const ORC=(hp=5)=>({n:'אורק',hp,ac:13,ab:0,dmg:[1,6],ml:8,hd:1,xp:100});
+const BEETLE=()=>({n:'חיפושית אש ענקית',hp:7,ac:15,ab:1,dmg:[2,4],ml:7,hd:1.5,xp:150});
+const CENTI=()=>({n:'נדל ענק',hp:2,ac:10,ab:-1,dmg:[1,2],ml:7,hd:.5,xp:50,poison:true});
+const SKEL=()=>({n:'שלד גמד',hp:5,ac:12,ab:0,dmg:[1,6],ml:12,hd:1,xp:100,undead:true});
+const SPIDER=()=>({n:'עכביש מערות ענק',hp:9,ac:12,ab:1,dmg:[1,6],ml:8,hd:2,xp:250,poison:true});
+const SERGEANT=()=>({n:'סמל אורקים',hp:9,ac:14,ab:1,dmg:[1,8],ml:9,hd:2,xp:200});
+const ZANZAR=()=>({id:'z',n:'זאנזר',hp:9,ac:11,ab:0,dmg:[1,4],ml:7,hd:3,xp:350,missile:true});
+
+/* ---------- state ---------- */
+let st=null, cr=null, ACTS=[];
+const KEY='salt-prisoner-v1';
+function save(){try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}}
+function load(){try{const s=localStorage.getItem(KEY);return s?JSON.parse(s):null}catch(e){return null}}
+function clearSave(){try{localStorage.removeItem(KEY)}catch(e){}}
+
+const has=k=>(st.inv[k]||0)>0;
+const add=(k,n=1)=>{st.inv[k]=(st.inv[k]||0)+n};
+const M=a=>mod(st.st[a]);
+const C=()=>CL[st.cls];
+function AC(){let a=10;if(st.kit){const c=C();if(c.arm)a=c.arm.ac;if(c.shield)a+=1}a+=M('dex');if(has('ring'))a+=1;return a}
+function WEAP(){if(st.kit)return C().w;if(has('spike'))return{n:'יתד ברזל',d:[1,4]};return{n:'אגרופים',d:[1,2]}}
+function G(s){if(!s)return'';return s.replace(/\{([^{}|]*)\|([^{}|]*)\}/g,(m,a,b)=>st&&st.g==='f'?b:a).replace(/\[NAME\]/g,esc(st?st.name:''))}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function dlog(t){st.dl.unshift(t);st.dl=st.dl.slice(0,10)}
+function msg(t,c=''){st.msgs.push({t,c})}
+function hurt(n,why){st.hp-=n;msg(`${why||'נפגעת'}: ${n} נק"פ`,'bad');if(st.hp<=0){st.hp=0;st.dying={end:S[st.cur].death||'d_generic'}}}
+function heal(n,why){const b=st.hp;st.hp=Math.min(st.max,st.hp+n);msg(`${why}: ${st.hp-b} נק"פ`,'ok')}
+
+/* ---------- sections ---------- */
+const S={
+s1:{t:'תא המלח',x:`{אתה מתעורר|את מתעוררת} על רצפה קרה ומחוספסת. טעם מלוח עולה על {שפתיך|שפתייך}, והראש הולם כאילו מישהו הלם בו בפטיש. הקירות סביבך שוברים את האור הקלוש לניצוצות ורודים ולבנים. מלח. תא שלם חצוב בתוך גוש של מלח.
+
+{אתה מנסה|את מנסה} להיזכר איך הגעת לכאן, ושום דבר לא עולה. לא מקום, לא פנים, אפילו לא שמך. {אתה לבוש|את לבושה} בכותונת פשוטה, {יחף|יחפה}, בלי שום חפץ.
+
+מתחת לדלת עץ כבדה, מחוזקת בפסי ברזל, מסתנן פס של אור לפיד. על הקיר שמול הדלת {אתה מבחין|את מבחינה} בסימנים חרוטים, קבורים למחצה תחת קרום של מלח.`,
+ ch:[{t:'לבחון את הסימנים שעל הקיר',go:'s2'},
+     {t:'להצמיד אוזן לדלת ולהקשיב',chk:{k:'skill',s:'hear',alt:{k:'d6',n:2}},ok:'s1h',fail:'s3'},
+     {t:'להלום על הדלת ולצעוק',go:'s3'}]},
+s1h:{t:'מאחורי הדלת',x:`{אתה מצמיד|את מצמידה} אוזן לעץ הקר. מהצד השני נשמעות נשימות כבדות, צקצוק של לעיסה ומלמול גרוני בשפה גסה. משום מה {אתה מבין|את מבינה} חלק מהמילים: «...הקוסם אמר לא לגעת... עד הירח החדש... משעמם...»
+
+שומר אחד. רק אחד. ומדי פעם הוא בא להציץ.`,
+ ch:[{t:'לחפש בתא משהו שישמש נשק',go:'s2'},{t:'להיצמד לקיר ליד הדלת ולחכות לו',go:'s4'},{t:'לקרוא לו',go:'s3'}]},
+s2:{t:'הרונות',on(){if(!has('spike')){add('spike');msg('נמצאה יתד ברזל: נשק מאולתר, ק4','ok')}},
+ x:`{אתה מגרד|את מגרדת} את קרום המלח באצבעות. מתחתיו נחשפות רונות זוויתיות, גמדיות. ואז קורה דבר מוזר: {אתה מבין|את מבינה} אותן. {אינך יודע|אינך יודעת} מאין, אבל המילים עולות מעצמן:
+<span class="rune">«אל תעירו את הישן תחת האולם הגדול. הכפור הוא נשימתו.»</span>
+כשאצבעותיך עוברות על הקיר, אחת האבנים זזה תחתן. מאחוריה גומחה קטנה, ובה יתד ברזל חלודה, ארוכה כמו פגיון. מישהו החביא אותה כאן, אולי אסיר שישב בתא הזה לפניך.`,
+ ch:[{t:'להיצמד לקיר ליד הדלת, היתד ביד, ולחכות לשומר',go:'s4'},{t:'להלום על הדלת ולקרוא לשומר',go:'s3'}]},
+s3:{t:'השומר',x:`בריח כבד נגרר, והדלת נפתחת בחריקה. בפתח ניצב אורק: גבוה ממך בראש, עורו אפור־ירקרק, וניבים צהובים בולטים מלסתו התחתונה. בידו האחת לפיד ובשנייה אלה.
+
+«הקוסם אמר {שתשתוק|שתשתקי},» הוא נוהם. «הקוסם לא אמר שאסור להרביץ.»`,
+ ch:[{t:'להסתער עליו',go:'s3c'},
+     {t:'להעמיד פנים שאיבדת את ההכרה',chk:{k:'abil',a:'cha'},ok:'s3t',fail:'s3c'},
+     {t:'להטיל את לחש השינה',if:()=>st.cls==='mu'&&st.sp.sleep>0,act(){st.sp.sleep--},go:'s3s'}]},
+s3c:{t:'קרב בפתח התא',x:`האורק משליך את הלפיד הצידה ומניף את האלה. אין לאן לברוח.`,cb:{en:[ORC()],win:'s5'}},
+s3t:{t:'התחבולה',x:`{אתה מגלגל|את מגלגלת} את העיניים {וצונח|וצונחת} על הרצפה. האורק מקלל, מתקרב ומתכופף לבדוק אם {אתה עדיין נושם|את עדיין נושמת}. לרגע אחד גרונו חשוף והאלה מורדת.`,cb:{en:[ORC()],win:'s5',surprise:true}},
+s3s:{t:'שינה',on(){st.xp+=100;msg('לחש השינה הוטל','ok')},x:`המילים עולות {לפיך|לפייך} מעצמן, הברות רכות בשפה שאינך {זוכר|זוכרת} שלמדת. עיני האורק מזדגגות, האלה נשמטת מידו, והוא קורס לרצפה ונוחר.
+
+{אתה קושר|את קושרת} אותו ברצועת החגורה שלו, {לוקח|לוקחת} את צרור המפתחות {ויוצא|ויוצאת} מהתא.`,
+ ch:[{t:'להמשיך',go:'s5'}]},
+s4:{t:'מארב',x:`{אתה נצמד|את נצמדת} לקיר ליד הצירים {ועוצר|ועוצרת} את הנשימה. הבריח נגרר, והאורק נכנס בצעד כבד, לפיד ביד, עיניו מחפשות אותך על הרצפה.
+
+זה הרגע.`,cb:{en:[ORC()],win:'s5',surprise:true}},
+s5:{t:'חדר השמירה',on(){st.kit=true;for(const k in C().inv)add(k,C().inv[k]);const g=dice(2,6).t;st.gold+=g;msg(`קיבלת את הציוד שלך. נשק: ${C().w.n}, דרג שריון ${AC()}`,'ok');msg(`בארגז היו גם ${g} מ"ז`,'ok')},
+ x:()=>`מעבר לדלת חדר קטן: שולחן עם עצמות מכורסמות, שרפרף הפוך וארגז עץ נעול. על חגורת האורק {אתה מוצא|את מוצאת} צרור מפתחות, ואחד מהם פותח את הארגז.
+
+בפנים, עטופים בבד, מונחים חפצים שהלב מזהה לפני הראש: ${C().kit}. הם שלך. {אתה בטוח|את בטוחה} בזה.
+
+לצידם פתק בכתב יד מסולסל:
+<span class="rune">«[NAME]. הקורבן. להשאיר בחיים עד הירח החדש. ז.»</span>
+[NAME]. השם צורב כמו מלח בפצע. זה שמך.`,
+ ch:[{t:'לצאת אל המנהרה',go:'s6'}]},
+s6:{t:'הצומת',x:`המנהרה נפתחת אל צומת רחב. פסי מסילה ישנים וחלודים נמשכים לאורך הרצפה. על עמוד עץ שחור מסמרות שלושה שלטים חרוטים ברונות גמדיות, ושוב {אתה קורא|את קוראת} אותן בלי מאמץ:
+<span class="rune">מסילת המכרה, אל הפיר הגדול<br>אולמות המלח<br>בית התפילה של בני ההר</span>
+מרחוק, ממעמקי ההר, עולה קול תופים עמום. אורקים. רבים מהם.`,
+ ch:[{t:'ללכת לאורך מסילת המכרה',go:'s7'},{t:'לפנות אל אולמות המלח',go:'s10'},{t:'לפנות אל בית התפילה של בני ההר',go:'s14'}]},
+s7:{t:'הקרון',x:`לאורך המסילה המנהרה יורדת בשיפוע תלול. בראש השיפוע עומד קרון כרייה ישן מעץ ומברזל, גלגליו עדיין על הפסים. דחיפה אחת, והוא יטוס מטה אל החושך.`,
+ ch:[{t:'לקפוץ לקרון ולשחרר את הבלם',chk:{k:'abil',a:'dex'},ok:'s7r',fail:'s7x'},{t:'ללכת ברגל לאורך המסילה',go:'s8'}]},
+s7r:{t:'נסיעה פרועה',x:`הקרון צולל אל החושך בשקשוק מחריש. {אתה נאחז|את נאחזת} בדפנות, רוח קרה מצליפה {בפניך|בפנייך}, והגלגלים מתיזים ניצוצות בכל פנייה. לרגע {אתה מבחין|את מבחינה} בצד המנהרה בזוהר אדמדם ובחלל מלא עצמות, ואז הוא נעלם מאחור.
+
+הקרון מאט לבסוף ונעצר בחבטה רכה מול ערמת הריסות.`,ch:[{t:'לרדת מהקרון',go:'s9'}]},
+s7x:{t:'התרסקות',on(){hurt(dice(1,6).t,'התרסקות')},x:`בפנייה חדה הקרון מזנק מהפסים ומשליך אותך אל קיר המנהרה. {אתה מתגלגל|את מתגלגלת} על אבני מלח חדות, והקרון מתנפץ לידך.
+
+כשהעולם מפסיק להסתובב, {אתה קולט|את קולטת} זוהר אדמדם שמתקרב אליך, ורחש של רגליים קשות על אבן.`,ch:[{t:'לקום ולהתכונן',go:'s8c'}]},
+s8:{t:'קן החיפושיות',x:`המנהרה מתרחבת לחלל נמוך. על הרצפה פזורים שברי כיטין, ובאמצע, ליד ערמת עצמות, שוכבת חיפושית ענק באורך של כמטר. שתי בלוטות מעל עיניה זוהרות באור אדום ויציב.
+
+היא עוד לא הבחינה בך.`,
+ ch:[{t:'לחמוק לידה בשקט',chk:{k:'skill',s:'silent',alt:{k:'d6',n:2}},ok:'s9',fail:'s8c'},{t:'לתקוף אותה בהפתעה',go:'s8a'}]},
+s8a:{t:'מכה ראשונה',x:`{אתה מתגנב|את מתגנבת} מאחוריה, צעד אחר צעד, עד שהזוהר האדום מאיר את {ידיך|ידייך}.`,cb:{en:[BEETLE()],win:'s8w',surprise:true}},
+s8c:{t:'החיפושית',x:`החיפושית מסתובבת אליך. הבלוטות שלה צובעות את החלל באדום, והלסתות נפתחות בנקישה.`,cb:{en:[BEETLE()],win:'s8w'}},
+s8w:{t:'בלוטות האש',on(){add('glow');msg('נמצאו בלוטות זוהרות','ok')},x:`הבלוטות ממשיכות לזהור גם אחרי מות החיפושית. {אתה חותך|את חותכת} אותן בזהירות {ועוטף|ועוטפת} אותן בבד. הן יאירו עוד ימים.`,ch:[{t:'להמשיך לאורך המסילה',go:'s9'}]},
+s9:{t:'הפיר שקרס',x:`המסילה נגמרת בבת אחת. לפניך פיר רחב שתקרתו קרסה לפני דורות, וערמת סלעים ענקית חוסמת את הדרך. מעל הערמה, לאורך הקיר, נמשך מדף צר שמוביל אל פתח בצד השני, בגובה של ארבעה מטרים.`,
+ ch:[{t:'לנעוץ את היתד בסלע ולטפס בעזרת החבל',if:()=>has('rope')&&has('spike'),go:'s18'},
+     {t:'לטפס אל המדף',chk:{k:'skill',s:'climb',alt:{k:'abil',a:'dex'}},ok:'s18',fail:'s9f'}]},
+s9f:{t:'החלקה',on(){hurt(dice(1,6).t,'נפילה')},x:`האחיזה נשמטת, ו{אתה נופל|את נופלת} אל ערמת הסלעים. כשהנשימה חוזרת, {אתה מוצא|את מוצאת} בין הסלעים סדק צר ו{זוחל|זוחלת} דרכו אל הצד השני.`,ch:[{t:'להמשיך',go:'s18'}]},
+s10:{t:'אולם העמודים',x:`אולם עצום נפתח לפניך. מאות עמודי מלח, מגולפים בדמויות של גמדים עם גרזנים ופטישים, נושאים תקרה שאינך {רואה|רואה}. כל צעד מהדהד שוב ושוב.
+
+ואז ההד משתנה. צעדים כבדים, נקישות של מתכת, קולות גסים. סיור אורקים מתקרב מן הצד השני של האולם.`,
+ ch:[{t:'להסתתר מאחורי עמוד',chk:{k:'skill',s:'hide',alt:{k:'d6',n:2}},ok:'s12',fail:'s11'},{t:'להתכונן לקרב',go:'s11'}]},
+s11:{t:'הסיור',x:`שני אורקים מבחינים בך. אחד שולף גרזן, השני חרב עקומה, ושניהם צועקים בהתלהבות של מי שסוף סוף מצאו משהו לעשות.`,cb:{en:[ORC(5),ORC(4)],win:'s13'}},
+s12:{t:'המעבר הצדדי',x:`הסיור חולף במרחק כמה צעדים, צוחק ומקלל, ונעלם בין העמודים. {אתה ממשיך|את ממשיכה} במעבר צדדי צר. אחרי כמה עשרות צעדים הרצפה מתחת לרגליך משמיעה צליל אחר. חלול.`,
+ ch:[{t:'לבדוק את הרצפה לפני כל צעד',chk:{k:'skill',s:'traps',alt:{k:'d6',n:2}},ok:'s12d',fail:'s12f'},{t:'לזנק קדימה ולעבור מהר',chk:{k:'abil',a:'dex',m:-2},ok:'s13',fail:'s12f'}]},
+s12d:{t:'הבור המכוסה',x:`{אתה כורע|את כורעת} {ומגשש|ומגששת} באצבעות. לוחות עץ דקים, מכוסים בשכבת מלח: בור מלכודת. {אתה עוקף|את עוקפת} אותו לאורך הקיר.`,ch:[{t:'להמשיך',go:'s13'}]},
+s12f:{t:'הבור',on(){hurt(dice(1,6).t,'נפילה לבור')},x:`הרצפה נעלמת מתחתיך. שלושה מטרים של נפילה, ונחיתה על גבישי מלח שננעצים בכל שריטה. בכאב רב {אתה מטפס|את מטפסת} החוצה.`,ch:[{t:'להמשיך',go:'s13'}]},
+s13:{t:'מגורי האורקים',on(){add('potion');add('map');const g=dice(2,6).t;st.gold+=g;msg(`נמצאו שיקוי ריפוי, מפה גסה ו־${g} מ"ז`,'ok')},x:`דרגשים מסריחים, קערות עם שאריות ושריון חלוד אחד. המגורים ריקים: כל האורקים בטקס התופים.
+
+בתוך שק שנשכח {אתה מוצא|את מוצאת} בקבוקון זכוכית ובו נוזל אדמדם, וכמה מטבעות. על השולחן ממוסמרת מפה גסה: חץ שמוביל אל «הגשר», ומעבר לו סמל של עין.`,ch:[{t:'ללכת בעקבות המפה אל הגשר',go:'s18'}]},
+s14:{t:'בית התפילה',x:`מנהרה צרה, מעובדת בקפידה, מובילה אל אולם תפילה קטן. על הקיר האחורי חרוטים הר ופטיש. על המזבח קערת אבן ובה מלח לבן וטהור, כאילו מישהו עדיין מקריב כאן.
+
+השקט כאן אחר. לא מאיים, אלא שומר.`,
+ ch:[{t:'לכרוע מול המזבח',go:'s14p'},{t:'להמשיך הלאה',go:'s15'}]},
+s14p:{t:'ברכת ההר',on(){heal(dice(2,4).t,'ברכת ההר')},x:`{אתה כורע|את כורעת} מול המזבח, וחום שקט מתפשט בגופך. לרגע {אתה רואה|את רואה} מול עיניך פנים זקנות עם זקן לבן וארוך, {ושומע|ושומעת} קול עמוק:
+<span class="rune">«{בן ביתנו חזר|בת ביתנו חזרה}.»</span>`,ch:[{t:'לקום ולהמשיך',go:'s15'}]},
+s15:{t:'מסדרון החורים',x:`המסדרון שאחרי בית התפילה צר וארוך. בשני קירותיו, בגובה החזה, פעורים עשרות חורים קטנים ועגולים, מסודרים בשורות ישרות מדי.`,
+ ch:[{t:'לחפש מנגנון ברצפה',chk:{k:'skill',s:'traps',alt:{k:'d6',n:2}},ok:'s15d',fail:'s15f'},{t:'לרוץ דרכו מהר',chk:{k:'abil',a:'dex',m:-4},ok:'s16',fail:'s15f'}]},
+s15d:{t:'האבן הבולטת',x:`אבן אחת ברצפה בולטת בחצי ציפורן מעל האחרות. {אתה דורך|את דורכת} מעליה בזהירות, {וממשיך|וממשיכה} הלאה.`,ch:[{t:'להמשיך',go:'s16'}]},
+s15f:{t:'החיצים',on(){hurt(dice(1,4).t,'חיצים זעירים')},x:`קליק. מהקירות נורים חיצים זעירים בשריקה. רובם מחטיאים, אבל לא כולם.`,ch:[{t:'להמשיך',go:'s16'}]},
+s16:{t:'הנדל',x:`משהו נושר מן התקרה אל כתפך: נדל ענק, ארוך כמו זרוע, מאות רגליו מתפתלות ולסתותיו נוטפות ארס.`,cb:{en:[CENTI()],win:'s17'}},
+s17:{t:'השלד הגמדי',x:`בקצה המסדרון, בגומחה, יושב שלד של גמד בשריון חלוד, עדיין אוחז בגרזן. על צווארו תלוי מפתח ברזל כבד, חרוט ברונות. {אתה קורא|את קוראת}: «מפתח הגשר».
+
+כשאצבעותיך מתקרבות, משהו כחלחל מהבהב בארובות העיניים הריקות. קסם זר ורענן, שמישהו הטיל כאן לא מזמן.`,
+ ch:[{t:'לחטוף את המפתח',go:'s17c'},{t:'לסגת ולהמשיך בלי המפתח',go:'s18'}]},
+s17c:{t:'השלד קם',x:`האצבעות היבשות נסגרות סביב פרק ידך. השלד קם בחריקת עצמות, מרים את הגרזן החלוד, ואש כחולה בוערת בארובות עיניו.`,cb:{en:[SKEL()],win:'s17w',flee:'s18'}},
+s17w:{t:'מפתח הגשר',on(){add('key');msg('נמצא מפתח הגשר','ok')},x:`השלד מתפרק לערמת עצמות, והאש הכחולה כבה. המפתח בידך.`,ch:[{t:'להמשיך',go:'s18'}]},
+s18:{t:'הגשר מעל התהום',death:'d_fall',x:`{אתה מגיע|את מגיעה} אל שפת תהום. רוח קרה עולה מהעומק ומביאה ריח של כפור. גשר אבן גמדי חוצה אותה, אבל אמצעו קרס, והתהום פעורה בין שני חלקיו.
+
+מעבר לתהום, בצד השני, דלת ברזל מגולפת בסמל של עין. בצד שלך, בבסיס הגשר, עמוד אבן ובו חריץ של מנעול.`,
+ ch:[{t:'לסובב את מפתח הגשר בחריץ',if:()=>has('key'),go:'s18k'},
+     {t:'להאיר את התהום בבלוטות הזוהרות',if:()=>has('glow'),go:'s18g'},
+     {t:'לנעוץ את היתד, לקשור את החבל ולהתנדנד מעל התהום',if:()=>has('rope')&&has('spike'),go:'s18r'},
+     {t:'לקפוץ מעל התהום',chk:{k:'abil',a:'dex'},ok:'s19',fail:'s18f'},
+     {t:'לטפס לאורך דופן התהום',chk:{k:'skill',s:'climb',alt:{k:'abil',a:'dex',m:-4}},ok:'s19',fail:'s18f'}]},
+s18k:{t:'מנגנון הגמדים',x:`המפתח מסתובב בקושי, בחריקה של מאתיים שנה. מתחת לגשר נשמעות שרשראות ענק, ומן התהום עולה לאט משטח אבן ומגשר עליה.`,ch:[{t:'לחצות את הגשר',go:'s19'}]},
+s18g:{t:'המדרגות הנסתרות',x:`{אתה מרים|את מרימה} את הבלוטות מעל התהום. באור האדום נחשף מה שהחושך הסתיר: מדרגות צרות, חצובות בדופן, שיורדות מתחת לגשר ועולות בצד השני.`,ch:[{t:'לרדת במדרגות ולעלות בצד השני',go:'s19'}]},
+s18r:{t:'מעל התהום',x:`היתד ננעצת עמוק בסדק בין האבנים. {אתה קושר|את קושרת} את החבל, {לוקח|לוקחת} תנופה {ונוחת|ונוחתת} בצד השני, הלב הולם.`,ch:[{t:'אל דלת הברזל',go:'s19'}]},
+s18f:{t:'על קצות האצבעות',death:'d_fall',on(){hurt(dice(1,4).t,'חבטה בשפת הגשר')},x:`הרגליים מחטיאות את האבן. ברגע האחרון {אתה נאחז|את נאחזת} בשפת הגשר, {תלוי|תלויה} מעל החושך, והאצבעות כבר מחליקות.`,ch:[{t:'למשוך את עצמך למעלה',chk:{k:'abil',a:'str'},ok:'s19',fail:'d_fall'}]},
+s19:{t:'המעבדה',x:`מאחורי דלת הברזל: חדר עבודה. אלמביקים מבעבעים על להבות כחולות, צנצנות ובהן יצורים קטנים כבושים במלח, ועל שולחן גדול יומן פתוח. כתב היד מוכר: אותו כתב מסולסל מן הפתק.
+<span class="rune">«...הדרקון איסגורן ישן כבר מאתיים שנה על אוצר באראק־זול. רק דם בית המלכים הגמדי יכול לפתוח את שער הכפור ולכבול אותו לרצוני. ולבסוף {מצאתי את הצאצא|מצאתי את הצאצאית}. הדם מהול, אבל יספיק. את {זיכרונו|זיכרונה} מחקתי, שלא {יתנגד|תתנגד}. כשהירח יתחדש, {דמו|דמה} יישפך על המזבח...»</span>
+עכשיו {אתה מבין|את מבינה} למה הרונות מדברות אליך.`,
+ ch:[{t:'לחפש במדפים',go:'s19s'},{t:'לחמוק מיד אל הדלת שבקצה החדר',chk:{k:'skill',s:'silent',alt:{k:'d6',n:3}},ok:'s21',fail:'s20'}]},
+s19s:{t:'המדפים',on(){add('flash');add('potion');msg('נמצאו אבקת הבזק ושיקוי ריפוי','ok')},x:`בין הצנצנות {אתה מוצא|את מוצאת} שקיק עור ובו אבקה כסופה, מסומן «הבזק», ובקבוקון של נוזל אדמדם.
+
+ואז משהו נוגע בשערך מלמעלה.`,ch:[{t:'להרים את הראש',go:'s20'}]},
+s20:{t:'שומר המעבדה',x:`מן התקרה משתלשל על חוט עבה עכביש ענק, בגודל של כלב. שמונה עיניים שחורות נוצצות באור הלהבות הכחולות.`,cb:{en:[SPIDER()],win:'s21'}},
+s21:{t:'זאנזר',x:`הדלת מובילה אל חדר עגול, וברצפתו מעגל של מלח שחור. במרכזו עומד אדם צנום בגלימה אפורה, זקנו קלוע בחוטי כסף: זאנזר. הוא מסתובב לאט, וחיוך דק עולה על פניו.
+
+«הקורבן יצא לטייל,» הוא אומר. «מרשים. ומיותר. {חזור|חזרי} לתא, ואולי אשאיר לך את החיים אחרי הטקס.»
+
+אצבעותיו כבר זזות באוויר.`,
+ ch:[{t:'להילחם בו',go:'s21c'},
+     {t:'להטיח בו את אבקת ההבזק',if:()=>has('flash'),act(){st.inv.flash--},go:'s21f'},
+     {t:'לברוח על פניו אל הפתח שמאחוריו',chk:{k:'abil',a:'dex',m:-2},ok:'s22a',fail:'s21c',act(){st.fl.ran=1}}]},
+s21c:{t:'הקרב בזאנזר',death:'d_sacrifice',x:`זאנזר מרים יד, וניצוץ כחול מתלקח בין אצבעותיו.`,cb:{en:[ZANZAR()],win:'s21w',onWin:zWin}},
+s21f:{t:'הבזק',death:'d_sacrifice',x:`השקיק מתפוצץ לרגליו. הבזק כסוף ממלא את החדר, וזאנזר מכסה את עיניו בצרחה.`,cb:{en:[ZANZAR()],win:'s21w',surprise:true,onWin:zWin}},
+s21w:{t:'אחרי הקרב',on(){if(st.fl.beat&&!has('ring')){add('ring');msg('טבעת הגנה ועוד 1: דרג השריון עלה','ok')}},
+ x:()=>st.fl.beat?`זאנזר שוכב על רצפת המלח, ומעגל המלח השחור מפוזר סביבו. על אצבעו טבעת כסף דקה, חרוטה ברונות של הגנה. עכשיו היא שלך.`
+  :`בזעקת זעם זאנזר מטיח אבקה ברצפה ונעלם בענן של מלח. רק קולו נשאר באוויר: «הירח עוד יתחדש, [NAME].»`,
+ ch:[{t:'להמשיך אל הפתח שמאחורי המעגל',go:'s22a'}]},
+s22a:{t:'הזקיף',x:()=>(st.fl.ran&&!st.fl.beat&&!st.fl.zfled?`{אתה חומק|את חומקת} על פני זאנזר לפני שהלחש שלו נשלם, {וטורק|וטורקת} מאחוריך דלת כבדה. קללותיו נבלעות באבן.
+
+`:'')+`המנהרה שמאחורי חדר הטקס מוארת בלפיד יחיד. מתחתיו, נשען על חנית ארוכה, עומד אורק גדול מכל מי {שראית|שראית} עד כה, בשריון קשקשים ועם צלקת לבנה על הפרצוף. סמל אורקים, ששמור כאן לפקודת הקוסם.
+
+הוא עוד לא {הבחין בך|הבחין בך}. אבל הוא לא ישן.`,
+ ch:[{t:'להתגנב לידו',chk:{k:'skill',s:'silent',alt:{k:'d6',n:2}},ok:'s22',fail:'s22c'},{t:'לתקוף אותו',go:'s22c'}]},
+s22c:{t:'סמל האורקים',x:`הסמל מסתובב בנחרה ומכוון אליך את החנית. «הקוסם אמר חי,» הוא מחייך. «לא אמר שלם.»`,cb:{en:[SERGEANT()],win:'s22'}},
+s22:{t:'המפה החרוטה',x:`בהמשך המנהרה, על הקיר, חרוטה מפה גמדית של כל המכרה. שתי דרכים מובילות החוצה.
+
+האחת עוברת דרך האולם הגדול אל שער באראק־זול. ליד האולם חרוט סימן אחד: נחש עם כנפיים.
+
+השנייה היא פיר האוורור הישן, צר ותלול, שעולה ישר אל צלע ההר.`,
+ ch:[{t:'אל האולם הגדול',go:'s23'},{t:'אל פיר האוורור',go:'s25'}]},
+s23:{t:'האולם הגדול',x:`כפור מכסה כל משטח באולם. במרכזו, על הר של מטבעות, גביעים ושריונות, שוכב איסגורן, הדרקון הלבן. גופו ארוך כמו שלוש עגלות, קשקשיו לבנים־כחלחלים, ומכל נשימה שלו עולה ענן אד שקופא באוויר ונושר כשלג דק.
+
+בקצה הרחוק, שער האבן הגדול פתוח כדי סדק, ואור יום חיוור מסתנן דרכו.`,
+ ch:[{t:'לחמוק לאורך הקיר אל השער',chk:{k:'skill',s:'silent',alt:{k:'abil',a:'dex',m:-2}},ok:'s23b',fail:'s24'}]},
+s23b:{t:'ליד השער',x:`{אתה כמעט שם|את כמעט שם}. אבל ממש ליד השער, בשולי ערמת האוצר, מונחים כמה מטבעות זהב, שלוש אבני חן ותכשיט כבד מזהב, במרחק יד.
+
+הדרקון נושם לאט. בינתיים.`,
+ ch:[{t:'לקחת את האוצר',chk:{k:'d6',n:4},ok:'s23t',fail:'s24'},{t:'להשאיר הכול ולצאת',go:'s26'}]},
+s23t:{t:'זהב של מלכים',on(){add('treasure');st.gold+=120;msg('נלקחו 120 מ"ז, אבני חן ותכשיט','ok')},x:`האצבעות נסגרות על הזהב. הדרקון ממלמל משהו בשנתו ומתהפך, {ואתה קופא|ואת קופאת} במקום. ואז הוא שוב נושם בשקט.`,ch:[{t:'לחמוק החוצה',go:'s26'}]},
+s24:{t:'איסגורן מתעורר',death:'d_frozen',x:`עין כחולה, גדולה כמגן, נפתחת. הדרקון מרים את ראשו לאט, ונשימתו נשאבת פנימה בשריקה ארוכה.`,
+ ch:[{t:'לזנק אל השער!',chk:{k:'save',s:'breath'},ok:'s24ok',fail:'d_frozen'}]},
+s24ok:{t:'ענן הכפור',death:'d_frozen',on(){hurt(dice(2,4).t,'שולי ענן הכפור')},x:`ענן לבן ממלא את האולם מאחוריך. {אתה מתגלגל|את מתגלגלת} מבעד לסדק בשער, הבגדים קפואים והעור בוער מקור, ושאגה מחרישה רודפת אחריך. הסדק צר מדי בשביל הדרקון.`,ch:[{t:'לרוץ',go:'s26'}]},
+s25:{t:'פיר האוורור',x:`הפיר צר ועולה כמעט אנכית, שלושים מטרים לפחות. בקצהו נקודת אור זעירה. בקירות בולטות פה ושם יתדות גמדיות ישנות, חלקן חלודות.`,
+ ch:[{t:'לטפס בעזרת החבל והיתד',if:()=>has('rope')&&has('spike'),go:'s26'},
+     {t:'לטפס',chk:{k:'skill',s:'climb',alt:{k:'abil',a:'dex'}},ok:'s26',fail:'s25f'},
+     {t:'לחזור ולנסות את האולם הגדול',go:'s23'}]},
+s25f:{t:'היתד שנשברה',death:'d_shaft',on(){hurt(dice(1,6).t,'החלקה בפיר')},x:`יתד נשברת תחת כף הרגל, ו{אתה מחליק|את מחליקה} כמה מטרים למטה עד שהידיים נתפסות שוב. האור למעלה נראה רחוק מתמיד.`,
+ ch:[{t:'לנסות שוב',chk:{k:'skill',s:'climb',alt:{k:'abil',a:'dex'}},ok:'s26',fail:'d_shaft'},{t:'לרדת ולנסות את האולם הגדול',go:'s23'}]},
+s26:{t:'אור היום',end:'win',x:()=>{let t=`{אתה יוצא|את יוצאת} אל אור היום. אור אמיתי. רוח הרים קרה מצליפה {בפניך|בפנייך}, ומתחת משתרע עמק ירוק שאת שמו {אינך זוכר|אינך זוכרת}. עדיין.
+
+ואז, כמו בועה שעולה מן המעמקים, צף זיכרון ראשון: אש של קמין, ויד מחוספסת של זקן שמלמדת אותך לקרוא רונות. «אל {תשכח|תשכחי} מאיפה באת, [NAME].»
+
+`;
+ if(st.fl.beat)t+=`מאחוריך, בתוך ההר, אין עוד מי שיחכה לירח החדש. זאנזר הובס, ואיתו התוכנית לכבול את הדרקון.`;
+ else t+=`אבל {אתה יודע|את יודעת} שזאנזר עדיין שם, איפשהו. הוא יחפש אותך.`;
+ if(has('treasure'))t+=`
+
+בכיס מקישים זהב ואבני חן של מלכי באראק־זול. ירושתך, אולי.`;
+ return t}},
+d_generic:{t:'המלח שומר',end:'death',x:`הכאב נעלם, ואיתו האור. {אתה צונח|את צונחת} על רצפת המלח, והקור מטפס לאט במעלה הגוף.
+
+המלח ישמר אותך היטב. אולי בעוד מאה שנה מישהו ימצא אותך כאן ויתהה מי היית. גם את זה, כנראה, לא יידע אף אחד.`},
+d_fall:{t:'התהום',end:'death',x:`האצבעות נשמטות. לרגע {אתה מרחף|את מרחפת} בחושך, והרוח הקרה שורקת סביבך. ואז שום דבר.`},
+d_sacrifice:{t:'הירח החדש',end:'death',x:`{אתה מתעורר|את מתעוררת} {כבול|כבולה} למזבח של מלח שחור. מעליך פניו של זאנזר, ובידו פגיון כסף.
+
+«תודה על ההתנגדות,» הוא אומר. «דם חם זורם טוב יותר.»
+
+הרחק למטה, בפעם הראשונה מזה מאתיים שנה, הדרקון פוקח עין.`},
+d_frozen:{t:'פסל של כפור',end:'death',x:`נשימתו של איסגורן מכה בך כמו קיר. הקור עז כל כך שהוא אפילו לא כואב. {אתה נשאר|את נשארת} לעמוד באמצע האולם, פסל קרח שקוף, יד אחת מושטת אל אור היום.
+
+הדרקון מניח שוב את ראשו על הזהב ונרדם. יש לו עכשיו קישוט חדש.`},
+d_shaft:{t:'הפיר',end:'death',x:`היתד האחרונה נשברת בפיצוח יבש. {אתה מחליק|את מחליקה} לאורך הפיר, האצבעות שורטות אבן, עד שהחושך בולע הכול. אור היום נשאר שם למעלה, קטן ורחוק.`}
+};
+function zWin(c){const z=c.en[0];if(z.st==='fled')st.fl.zfled=1;else st.fl.beat=1}
+const NUM={};Object.keys(S).forEach((k,i)=>NUM[k]=i+1);
+
+/* ---------- navigation ---------- */
+function go(id){st.cur=id;st.ent=false;st.chk=null;st.cmb=null;st.dying=null;render();try{document.querySelector('.page').scrollIntoView({block:'start'})}catch(e){window.scrollTo(0,0)}}
+function enter(){const s=S[st.cur];if(st.ent)return;st.ent=true;st.msgs=[];if(s.on)s.on();if(s.cb)st.cmb=initC(s.cb);if(s.end==='win')st.done='win';if(s.end==='death')st.done='death';save()}
+
+/* ---------- checks ---------- */
+function runChk(c){
+ if(c.k==='skill'){
+   if(st.cls==='thief'){const p=TS[c.s],r=R(100);dlog(`${SK[c.s]}: ק100 = ${r} (צריך ${p} או פחות)`);return{txt:`${SK[c.s]}: ק100, צריך ${p}% או פחות`,r,ok:r<=p}}
+   const a=runChk(c.alt);a.txt=`${SK[c.s]} (לא ${st.g==='f'?'גנבת':'גנב'}): `+a.txt;return a}
+ if(c.k==='abil'){const t=st.st[c.a]+(c.m||0),r=R(20);dlog(`${AB[c.a]}: ק20 = ${r} (צריך ${t} או פחות)`);return{txt:`בדיקת ${AB[c.a]}: ק20, צריך ${t} או פחות`,r,ok:r<=t}}
+ if(c.k==='save'){const t=C().sv[c.s],m=c.s==='spell'?M('wis'):0,r=R(20);dlog(`הצלה מפני ${SV[c.s]}: ק20 = ${r}${m?' '+sg(m):''} (צריך ${t})`);return{txt:`הצלה מפני ${SV[c.s]}: ק20${m?' '+sg(m):''}, צריך ${t} או יותר`,r,ok:r+m>=t}}
+ if(c.k==='d6'){const r=R(6);dlog(`ק6 = ${r} (הצלחה ב־1 עד ${c.n})`);return{txt:`ק6, הצלחה ב־1 עד ${c.n}`,r,ok:r<=c.n}}
+}
+function chkLabel(c){
+ if(c.k==='skill')return st.cls==='thief'?SK[c.s]+' '+TS[c.s]+'%':SK[c.s];
+ if(c.k==='abil')return AB[c.a];if(c.k==='save')return'הצלה';return'ק6'}
+function choose(ch){
+ if(ch.act)ch.act();
+ if(ch.chk){st.chk={c:ch.chk,ok:ch.ok,fail:ch.fail,res:runChk(ch.chk)};save();render();return}
+ go(ch.go)}
+
+/* ---------- death's door ---------- */
+function deathRoll(luck){
+ if(luck){st.luck--;st.dfail--}
+ const t=C().sv.death,r=R(20);dlog(`סף המוות: ק20 = ${r} (צריך ${t})`);
+ if(r>=t){st.dying.res={r,ok:true};}else{st.dfail++;st.dying.res={r,ok:false}}
+ save();render()}
+
+/* ---------- combat ---------- */
+function initC(d){return{en:d.en.map(e=>({...e,cur:e.hp,st:'ok'})),sur:!!d.surprise,mc:false,lg:[],over:false,miss:null,rd:0}}
+const alive=c=>c.en.filter(e=>e.st==='ok');
+function L(c,t,cls=''){c.lg.push({t,cls})}
+function dmgRoll(dd,p=0){return dice(dd[0],dd[1],p)}
+function pAtk(c,bs){
+ const e=alive(c)[0];if(!e)return;const w=WEAP(),sm=M('str'),r=R(20),b=bs?4:0,tot=r+sm+b,hit=r===20||(r!==1&&tot>=e.ac);
+ dlog(`תקיפה: ק20 = ${r}${sm?' '+sg(sm):''}${b?' +4':''} מול ${e.ac}`);
+ if(!hit){L(c,`${G('{אתה מחטיא|את מחטיאה}')} (${r}${sm?sg(sm):''}${b?'+4':''} מול דרג שריון ${e.ac}).`);c.miss={bs};return}
+ c.miss=null;let d=Math.max(1,dmgRoll(w.d,sm).t);if(bs)d*=2;e.cur-=d;
+ L(c,`${bs?'דקירה בגב! ':''}${G('{אתה פוגע|את פוגעת}')} ב${e.n} ב${w.n}: ${d} נק"פ.`,'ok');
+ if(e.cur<=0){e.cur=0;e.st='dead';st.xp+=e.xp;L(c,`ה${e.n} נופל.`,'ok')}
+ morale(c)}
+function morale(c){if(c.mc||!alive(c).length)return;c.mc=true;const e=alive(c)[0],r=dice(2,6).t;dlog(`מורל: 2ק6 = ${r} (מורל ${e.ml})`);
+ if(r>e.ml){alive(c).forEach(x=>{x.st='fled';st.xp+=Math.round(x.xp/2)});L(c,`בדיקת מורל ${r} מול ${e.ml}: האויב נס!`,'ok')}}
+function eTurn(c,fleeing){
+ for(const e of alive(c)){if(st.dying)return;
+  if(e.missile&&!e.used){e.used=true;const d=dmgRoll([1,6],1).t;L(c,`${e.n} משגר קליע קסם: ${d} נק"פ.`,'bad');dmgP(d);continue}
+  const r=R(20),ab=e.ab+(fleeing?2:0),tot=r+ab,hit=r===20||(r!==1&&tot>=AC());
+  dlog(`${e.n} תוקף: ק20 = ${r}${ab?' '+sg(ab):''} מול ${AC()}`);
+  if(!hit){L(c,`ה${e.n} מחטיא.`);continue}
+  const d=Math.max(1,dmgRoll(e.dmg).t);L(c,`ה${e.n} פוגע: ${d} נק"פ.`,'bad');dmgP(d);
+  if(e.poison&&!st.dying){const t=C().sv.death,sr=R(20);dlog(`הצלה מפני רעל: ק20 = ${sr} (צריך ${t})`);
+   if(sr<t){const x=dmgRoll([1,4]).t;L(c,`ארס! ההצלה נכשלה (${sr}): עוד ${x} נק"פ.`,'bad');dmgP(x)}else L(c,`${G('{הדפת|הדפת}')} את הארס (${sr}).`)}
+ }}
+function dmgP(d){st.hp-=d;if(st.hp<=0){st.hp=0;st.dying={end:S[st.cur].death||'d_generic'}}}
+function endChk(c){if(!alive(c).length){c.over=true}}
+function round(){
+ const c=st.cmb;if(c.over||st.dying)return;c.rd++;c.miss=null;L(c,`סבב ${c.rd}`,'h');
+ if(c.sur){c.sur=false;L(c,'סבב הפתעה: האויב אינו מגיב.');pAtk(c,st.cls==='thief');endChk(c);fin();return}
+ const pi=R(6),ei=R(6);dlog(`יוזמה: ${pi} מול ${ei}`);L(c,`יוזמה: ${pi} מול ${ei}.`);
+ if(pi>=ei){pAtk(c,false);endChk(c);if(!c.over)eTurn(c)}else{eTurn(c);if(!st.dying){pAtk(c,false);endChk(c)}}
+ fin()}
+function luckRe(){const c=st.cmb;if(!c.miss||st.luck<1)return;st.luck--;L(c,'נקודת מזל: גלגול חוזר.','h');const bs=c.miss.bs;c.miss=null;pAtk(c,bs);endChk(c);fin()}
+function cast(sp){
+ const c=st.cmb;c.rd++;c.miss=null;st.sp[sp]--;L(c,`סבב ${c.rd}`,'h');const s=c.sur;c.sur=false;
+ if(sp==='missile'){const e=alive(c)[0],d=dmgRoll([1,6],1).t;e.cur-=d;dlog(`קליע קסם: ${d}`);L(c,`קליע קסם פוגע ב${e.n}: ${d} נק"פ.`,'ok');
+  if(e.cur<=0){e.cur=0;e.st='dead';st.xp+=e.xp;L(c,`ה${e.n} נופל.`,'ok')}morale(c)}
+ else{let cap=dice(2,8).t;dlog(`שינה: 2ק8 = ${cap} קב"פ`);L(c,`לחש שינה: ${cap} קב"פ של יצורים.`);
+  for(const e of alive(c)){if(e.hd<=cap){cap-=e.hd;e.st='sleep';st.xp+=e.xp;L(c,`ה${e.n} צונח ונרדם.`,'ok')}}}
+ endChk(c);if(!c.over&&!s)eTurn(c);fin()}
+function flee(){const c=st.cmb;L(c,'בריחה! האויב מקבל תקיפה חופשית.','h');eTurn(c,true);if(!st.dying){go(S[st.cur].cb.flee);return}fin()}
+function fin(){save();render()}
+
+/* ---------- character creation ---------- */
+const KEYST={fighter:['str','con'],mu:['int','con'],thief:['dex','wis']};
+function newCr(){const c={name:'ארין',g:'m',cls:'fighter',rolls:{}};for(const k in CL)c.rolls[k]=rollStats(k);saveCr(c);return c}
+function rollStats(cls){const o={};ABK.forEach(k=>o[k]=dice(3,6).t);for(const k of KEYST[cls])while(o[k]<13)o[k]=dice(3,6).t;return o}
+function saveCr(c){try{localStorage.setItem(KEY+'-cr',JSON.stringify(c))}catch(e){}}
+function loadCr(){try{const c=JSON.parse(localStorage.getItem(KEY+'-cr'));return c&&c.rolls&&c.rolls.fighter?c:null}catch(e){return null}}
+function startGame(){
+ const c=CL[cr.cls],cs=cr.st||cr.rolls[cr.cls],hp=Math.max(1,c.hd+mod(cs.con));
+ st={name:(cr.name||'').trim()||'ארין',g:cr.g,cls:cr.cls,st:cs,max:hp,hp,luck:3+Math.max(0,mod(cs.cha)),
+  inv:{},kit:false,gold:0,xp:0,sp:cr.cls==='mu'?{sleep:1,missile:1}:{},rested:false,dfail:0,fl:{},dl:[],msgs:[],cur:'s1',ent:false};
+ dlog('המשחק התחיל');go('s1')}
+
+/* ---------- render ---------- */
+function B(label,fn,cls='btn',attrs=''){ACTS.push(fn);return`<button class="${cls}" data-a="${ACTS.length-1}" ${attrs}>${label}</button>`}
+function paras(t){t=t.replace(/\n?(<span class="rune">)/g,'$1').replace(/(<\/span>)\n?/g,'$1');return t.split(/\n\s*\n/).map(p=>`<p>${p.replace(/\n/g,'<br>')}</p>`).join('')}
+function render(){ACTS=[];const app=document.getElementById('app');
+ if(!st){app.innerHTML=topBar()+`<div class="wrap"><main class="page">${creation()}</main><aside class="sheet">${crSheet()}</aside></div>`;return}
+ enter();app.innerHTML=topBar()+`<div class="wrap"><main class="page">${page()}</main><aside class="sheet">${sheet()}</aside></div>`}
+function topBar(){
+ const chips=st?`<span class="chip hp">נק"פ <b>${st.hp}/${st.max}</b></span><span class="chip">ד"ש <b>${AC()}</b></span><span class="chip">§ <b>${NUM[st.cur]}</b></span>`:'';
+ return`<header class="top"><div class="top-in"><div class="brand">אסיר המלח</div><div class="chips">${chips}</div></div></header>`}
+function creation(){
+ const c=CL[cr.cls],cs=cr.rolls[cr.cls],hp=Math.max(1,c.hd+mod(cs.con));
+ return`<div class="hero">אסיר המלח</div><div class="tag">הרפתקת יחיד לסכנות ומפלצות 1.4 · רמה 1 · כ־35 קטעים</div>
+ <div class="intro"><p>זאנזר הקוסם חטף אותך והשליך אותך למכרה מלח עתיק, שהיה פעם מבצר גמדי. הגמדים נטשו אותו כשדרקון השתלט על המקום, והדרקון ישן מאז. ${cr.g==='f'?'אינך זוכרת':'אינך זוכר'} דבר. לא את העולם שבחוץ, ולא את עצמך.</p></div>
+ <div class="field"><label for="nm">שם הדמות (יתגלה בהמשך)</label><input type="text" id="nm" value="${esc(cr.name)}" maxlength="24"></div>
+ <div class="field"><label>מין</label><div class="seg">${B('גבר',()=>{cr.g='m';saveCr(cr);render()},'btn',`aria-pressed="${cr.g==='m'}"`)}${B('אישה',()=>{cr.g='f';saveCr(cr);render()},'btn',`aria-pressed="${cr.g==='f'}"`)}</div></div>
+ <div class="field"><label>מקצוע</label><div class="classes">${Object.keys(CL).map(k=>B(`<span class="n">${cr.g==='f'?CL[k].nf:CL[k].n}</span><span class="d">${CL[k].desc}</span>`,()=>{cr.cls=k;saveCr(cr);render()},'cls',`aria-pressed="${cr.cls===k}"`)).join('')}</div></div>
+ <div class="field"><label>תכונות (3ק6 לפי הסדר)</label><div class="stats" style="max-width:420px">${ABK.map(k=>`<div class="stat"><div class="k">${AB[k]}${KEYST[cr.cls].includes(k)?' ★':''}</div><div class="v">${cs[k]}</div><div class="m">${sg(mod(cs[k]))}</div></div>`).join('')}</div></div>
+ <p class="note">נק"פ התחלתיות: ${hp} (מרבי לפי כללי משחק יחיד). ★ תכונות המפתח של המקצוע: תמיד 13 ומעלה. התכונות נקבעות פעם אחת ואין גלגול מחדש.</p>
+ <div class="btns">${B('להתחיל',()=>{const i=document.getElementById('nm');if(i)cr.name=i.value;startGame()},'btn main')}</div>`}
+function crSheet(){return`<div class="slabel">איך משחקים</div><div class="rows note" style="gap:8px;line-height:1.5">
+ <div>כל קטע מסתיים בבחירות. חלקן דורשות בדיקה: הקוביות מגולגלות אוטומטית ומוצגות ביומן.</div>
+ <div>ב־0 נק"פ ${'הדמות'} על סף המוות: הצלה מפני מוות מחזירה אותה עם נק"פ אחת. הכישלון השלישי במשחק הוא הסוף.</div>
+ <div>מנוחה קצרה אחת: ק4 נק"פ.</div>
+ <div>לגנב בונוס של משחק יחיד לכישורים.</div>
+ <div>ההתקדמות נשמרת בדפדפן הזה.</div></div>`}
+function page(){
+ const s=S[st.cur];let h=`<div class="sechead"><div class="secno">${NUM[st.cur]}</div><h1>${G(s.t)}</h1></div>`;
+ const x=typeof s.x==='function'?s.x():s.x;h+=`<div class="prose">${paras(G(x))}</div>`;
+ if(st.msgs.length)h+=`<div class="msgs">${st.msgs.map(m=>`<div class="msg ${m.c}">${G(m.t)}</div>`).join('')}</div>`;
+ if(st.dying)return h+deathPanel();
+ if(s.end)return h+endPanel(s);
+ if(st.cmb)return h+combatPanel(s);
+ if(st.chk)return h+chkPanel();
+ const ch=(s.ch||[]).filter(c=>!c.if||c.if());
+ h+=`<div class="choices">${ch.map(c=>B(`<span>${G(c.t)}</span><span class="go ${c.chk?'chk':''}">${c.chk?'בדיקה: '+chkLabel(c.chk):'עבור ל־'+NUM[c.go]}</span>`,()=>choose(c),'choice')).join('')}</div>`;
+ return h}
+function chkPanel(){const k=st.chk,r=k.res;
+ let h=`<div class="panel"><div class="plabel">בדיקה</div><div class="roll">${G(r.txt)}<br>יצא <b>${r.r}</b>: <span class="res ${r.ok?'ok':'bad'}">${r.ok?'הצלחה':'כישלון'}</span></div><div class="btns">`;
+ h+=B(`להמשיך ← ${NUM[r.ok?k.ok:k.fail]}`,()=>go(r.ok?k.ok:k.fail),'btn main');return h+`</div></div>`}
+function deathPanel(){const d=st.dying,t=C().sv.death;
+ let h=`<div class="panel"><div class="plabel red">על סף המוות</div><div class="roll">${G('{אתה מאבד|את מאבדת}')} את ההכרה. הצלה מפני מוות: ק20, צריך ${t} או יותר. כישלונות במשחק: ${st.dfail} מתוך 3.</div>`;
+ if(d.res)h+=`<div class="roll">יצא <b>${d.res.r}</b>: <span class="res ${d.res.ok?'ok':'bad'}">${d.res.ok?G('{נאחזת|נאחזת} בחיים'):'כישלון'}</span></div>`;
+ h+='<div class="btns">';
+ if(d.res&&d.res.ok)h+=B('להתעשת (נק"פ אחת)',()=>{st.hp=1;st.dying=null;save();render()},'btn main');
+ else if(st.dfail>=3)h+=`<div class="endmark dead">${G(S[d.end].t)}</div><div class="prose">${paras(G(S[d.end].x))}</div>`+B('להתחיל מחדש',()=>{clearSave();st=null;cr=newCr();render();window.scrollTo(0,0)},'btn main');
+ else{h+=B(d.res?'להמשיך להיאבק':'לגלגל הצלה',()=>deathRoll(false),'btn main')}
+ return h+'</div></div>'}
+function combatPanel(s){const c=st.cmb,w=WEAP();
+ let h=`<div class="panel"><div class="plabel red">קרב${c.sur?' · הפתעה':''}</div><div class="foes">${c.en.map(e=>`<div class="foe ${e.st!=='ok'?'out':''}"><div><div class="nm">${e.n}</div><div class="sub">ד"ש ${e.ac} · ${e.st==='dead'?'מת':e.st==='fled'?'נס':e.st==='sleep'?'ישן':'נק"פ '+e.cur+'/'+e.hp}</div></div><div class="bar"><i style="width:${Math.round(100*e.cur/e.hp)}%"></i></div><div class="sub">${DN(e.dmg[0],e.dmg[1])}</div></div>`).join('')}</div>`;
+ h+='<div class="btns">';
+ if(c.over){h+=B(`ניצחון. להמשיך ← ${NUM[s.cb.win]}`,()=>{if(s.cb.onWin)s.cb.onWin(c);go(s.cb.win)},'btn main')}
+ else{
+  h+=B(`תקיפה: ${w.n} (${DN(w.d[0],w.d[1])})`,round,'btn main');
+  if(st.cls==='mu'){
+   h+=B(`קליע קסם (${st.sp.missile||0})`,()=>cast('missile'),'btn','' + (st.sp.missile>0?'':'disabled'));
+   const und=alive(c).some(e=>e.undead);h+=B(`שינה (${st.sp.sleep||0})`,()=>cast('sleep'),'btn',(st.sp.sleep>0&&!und?'':'disabled')+(und?' title="אינו משפיע על מתים מהלכים"':''));}
+  if(s.cb.flee)h+=B('לברוח',flee,'btn');}
+ h+='</div>';
+ if(c.lg.length)h+=`<div class="clog">${c.lg.slice(-14).map(l=>`<div class="${l.cls}">${l.t}</div>`).join('')}</div>`;
+ return h+'</div>'}
+function endPanel(s){const win=s.end==='win';
+ const gem=has('treasure')?900:0,tot=st.xp+st.gold+gem;
+ let ttl=win?(st.fl.beat?'הניצחון על זאנזר':has('treasure')?'ירושת באראק־זול':'חופש'):'הסוף';
+ let h=`<div class="endmark ${win?'win':'dead'}">${ttl}</div>`;
+ if(win)h+=`<div class="panel"><div class="plabel">נק"ן</div><div class="rows"><div class="row"><span>מפלצות שהובסו</span><span>${st.xp}</span></div><div class="row"><span>זהב</span><span>${st.gold}</span></div>${gem?`<div class="row"><span>אבני חן ותכשיט</span><span>${gem}</span></div>`:''}<div class="row" style="border-top:1px solid var(--line);padding-top:4px"><span>סך הכול</span><span>${tot}</span></div></div></div>`;
+ h+=`<div class="btns">${B('משחק חדש',()=>{clearSave();st=null;cr=newCr();render();window.scrollTo(0,0)},'btn main')}${!win?B('לחזור לתחילת ההרפתקה עם אותה דמות',()=>{const k={name:st.name,g:st.g,cls:st.cls,st:st.st};cr=k;startGame()},'btn'):''}</div>`;
+ return h}
+function sheet(){
+ const c=C(),w=WEAP();
+ let h=`<h2>${st.kit?esc(st.name):G('{אסיר|אסירה} ללא שם')}</h2><div class="who">${st.g==='f'?c.nf:c.n} · רמה 1</div>`;
+ h+=`<div class="vitals"><div class="vit hp"><div class="v">${st.hp}<span style="font-size:13px;color:var(--muted)">/${st.max}</span></div><div class="k">נק"פ</div></div><div class="vit"><div class="v">${AC()}</div><div class="k">דרג שריון</div></div><div class="vit"><div class="v">${st.dfail}/3</div><div class="k">סף המוות</div></div></div>`;
+ h+=`<div class="sblock"><div class="stats">${ABK.map(k=>`<div class="stat"><div class="k">${AB[k]}</div><div class="v">${st.st[k]}</div><div class="m">${sg(M(k))}</div></div>`).join('')}</div></div>`;
+ h+=`<div class="sblock"><div class="slabel">נשק</div><div class="rows"><div class="row"><span>${w.n}</span><span>${DN(w.d[0],w.d[1])}${M('str')?' '+sg(M('str')):''}</span></div><div class="row"><span>שריון</span><span>${st.kit&&c.arm?c.arm.n:'ללא'}${st.kit&&c.shield?' ומגן':''}</span></div></div></div>`;
+ if(st.cls==='mu')h+=`<div class="sblock"><div class="slabel">לחשים (עוצמה 1)</div><div class="rows"><div class="row"><span>שינה, 2ק8 קב"פ</span><span>${st.sp.sleep?'זמין':'הוטל'}</span></div><div class="row"><span>קליע קסם, ק6 ועוד 1</span><span>${st.sp.missile?'זמין':'הוטל'}</span></div></div></div>`;
+ if(st.cls==='thief')h+=`<div class="sblock"><div class="slabel">כישורי גנב (כולל בונוס)</div><div class="rows">${Object.keys(TS).map(k=>`<div class="row"><span>${SK[k]}</span><span>${TS[k]}%</span></div>`).join('')}</div></div>`;
+ h+=`<div class="sblock"><div class="slabel">הצלות</div><div class="rows">${Object.keys(SV).map(k=>`<div class="row"><span>${SV[k]}</span><span>${c.sv[k]}</span></div>`).join('')}</div></div>`;
+ const inv=Object.keys(st.inv).filter(k=>st.inv[k]>0);const canAct=!st.done&&!st.dying;
+ h+=`<div class="sblock"><div class="slabel">ציוד</div><div class="inv">${inv.length?inv.map(k=>`<div class="row"><span>${IT[k]}${st.inv[k]>1?' ×'+st.inv[k]:''}</span>${k==='potion'&&canAct&&st.hp<st.max?B('לשתות',()=>{st.inv.potion--;const n=dmgRoll([1,6],1).t,b=st.hp;st.hp=Math.min(st.max,st.hp+n);dlog(`שיקוי ריפוי: ${n}`);if(st.cmb)L(st.cmb,`שיקוי ריפוי: ${st.hp-b} נק"פ.`,'ok');else msg(`שיקוי ריפוי: ${st.hp-b} נק"פ`,'ok');fin()},'mini'):'<span></span>'}</div>`).join(''):'<div class="note">כלום. רק הכותונת.</div>'}<div class="row"><span>זהב</span><span>${st.gold} מ"ז</span></div></div></div>`;
+ h+=`<div class="sblock"><div class="rows"><div class="row"><span>נק"ן מקרבות</span><span>${st.xp}</span></div></div>`;
+ if(canAct&&!st.cmb&&!st.rested&&st.hp<st.max)h+=`<div class="btns">${B('מנוחה קצרה (פעם אחת): ק4',()=>{st.rested=true;const n=R(4),b=st.hp;st.hp=Math.min(st.max,st.hp+n);dlog(`מנוחה קצרה: ${n}`);msg(`מנוחה קצרה: ${st.hp-b} נק"פ`,'ok');fin()},'btn')}</div>`;
+ h+=`</div><div class="sblock"><div class="slabel">יומן קוביות</div><div class="dlog">${st.dl.map(x=>`<div>${x}</div>`).join('')}</div></div>`;
+ if(!st.done)h+=`<div class="sblock">${B('להתחיל מחדש',()=>{if(st._sure){clearSave();st=null;cr=newCr();render()}else{st._sure=true;render();setTimeout(()=>{if(st){st._sure=false;render()}},4000)}},'btn')}${st._sure?'<span class="note"> לחיצה נוספת מוחקת את המשחק</span>':''}</div>`;
+ return h}
+
+/* ---------- events & boot ---------- */
+document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b||b.disabled)return;const f=ACTS[+b.dataset.a];if(f)f()});
+document.addEventListener('input',e=>{if(e.target.id==='nm'&&cr){cr.name=e.target.value;saveCr(cr)}});
+function start(){try{st=load();if(st&&!S[st.cur])st=null;cr=loadCr()||newCr();render()}catch(e){st=null;clearSave();cr=newCr();try{render()}catch(e2){document.getElementById('app').innerHTML='<p style="padding:20px">שגיאה בטעינה: '+esc(e2.message)+'</p>'}}}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+</script>
+
+</body></html>
